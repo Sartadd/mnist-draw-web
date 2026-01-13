@@ -1,21 +1,42 @@
+import { useState } from "react";
 import DrawCanvas from "./components/DrawCanvas";
-import { canvasToBase64 } from "./services/api";
+import { predictDigit } from "./services/api";
 
 function App() {
-  const handlePredict = (canvas) => {
-    const imageBase64 = canvasToBase64(canvas);
-    console.log("Base64 image:", imageBase64.substring(0, 100));
-    const img = new Image();
-    img.src = "data:image/png;base64," + imageBase64;
-    document.body.appendChild(img);
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const handlePredict = async (canvas) => {
+    setLoading(true);
+    try {
+      const data = await predictDigit(canvas);
+      setResult(data);
+    } catch (error) {
+      console.error(error);
+      alert("Error while predicting");
+    } finally {
+      setLoading(false);
+    }
   };
-
-
 
   return (
     <div style={{ padding: "20px" }}>
       <h1>MNIST Draw App</h1>
+
       <DrawCanvas onPredict={handlePredict} />
+
+      {loading && <p>Predicting...</p>}
+
+      {result && (
+        <div style={{ marginTop: "10px" }}>
+          <p>
+            <strong>Prediction:</strong> {result.prediction}
+          </p>
+          <p>
+            <strong>Confidence:</strong> {result.confidence}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
